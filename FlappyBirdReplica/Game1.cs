@@ -17,7 +17,7 @@ namespace FlappyBirdReplica
         SpriteBatch spriteBatch;
 
 		Entity bird;
-		List<Entity> obstacles;
+		List<Obstacle> obstacles;
 
 		public Game1()
         {
@@ -34,7 +34,10 @@ namespace FlappyBirdReplica
         protected override void Initialize()
         {
 			// TODO: Add your initialization logic here
-			obstacles = new List<Entity>();
+			Physics.Gravity = 9.81f;
+			Physics.Friction = 0f;
+
+			obstacles = new List<Obstacle>();
 
             base.Initialize();
         }
@@ -51,32 +54,33 @@ namespace FlappyBirdReplica
 			Texture2D birdTexture = Content.Load<Texture2D>("bird");
 			Texture2D obstacleTexture = Content.Load<Texture2D>("obstacle");
 
-			bird = new Entity
+			bird = new Bird
 			{
-				Texture2D = birdTexture,
-				X = 30,
-				Y = 100,
+				Position = new Vector2(30, 100),
 				Scale = new Vector2(0.1f, 0.1f),
-				Velocity = new Vector2(0, 0.5f),
-				Acceleration = new Vector2(0, 0.3f)
-
+				Texture2D = birdTexture,
+				SimulatePhysics = true,
+				JumpForce = 3f
 			};
 
 			Random random = new Random();
 
 			for (int i = 0; i < 4; i++)
-				obstacles.Add(new Entity
+				obstacles.Add(new Obstacle
 				{
-					Texture2D = obstacleTexture,
-					X = GraphicsDevice.PresentationParameters.Bounds.Width / 2 * i + GraphicsDevice.PresentationParameters.Bounds.Width,
-					Y = random.Next(-250, -50),
+					Position = new Vector2(GraphicsDevice.PresentationParameters.Bounds.Width / 2 * i + GraphicsDevice.PresentationParameters.Bounds.Width, random.Next(-250, -50)),
 					Scale = Vector2.One * 3f,
-					Velocity = new Vector2(-5f, 0f),
-					Acceleration = Vector2.Zero
+					Texture2D = obstacleTexture,
+					SimulatePhysics = false,
+					MoveSpeed = 200f
 				});
 
-            // TODO: use this.Content to load your game content here
-        }
+			obstacles[0].OnScreenLeft += () => obstacles[0].Position = new Vector2(obstacles[3].Position.X + GraphicsDevice.PresentationParameters.Bounds.Width / 2, random.Next(-250, -50));
+			obstacles[1].OnScreenLeft += () => obstacles[1].Position = new Vector2(obstacles[0].Position.X + GraphicsDevice.PresentationParameters.Bounds.Width / 2, random.Next(-250, -50));
+			obstacles[2].OnScreenLeft += () => obstacles[2].Position = new Vector2(obstacles[1].Position.X + GraphicsDevice.PresentationParameters.Bounds.Width / 2, random.Next(-250, -50));
+			obstacles[3].OnScreenLeft += () => obstacles[3].Position = new Vector2(obstacles[2].Position.X + GraphicsDevice.PresentationParameters.Bounds.Width / 2, random.Next(-250, -50));
+			// TODO: use this.Content to load your game content here
+		}
 
         /// <summary>
         /// UnloadContent will be called once per game and is the place to unload
@@ -94,22 +98,20 @@ namespace FlappyBirdReplica
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
+			Time.UpdateTime(gameTime);
+
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            // TODO: Add your update logic here
+			// TODO: Add your update logic here
 
-			if(Keyboard.GetState().IsKeyDown(Keys.Space)) {
-					bird.Velocity = new Vector2(0, -10f);
-			}
-
-			bird.CalculateVelocity();
-			bird.CalculatePosition();
+			bird.SelfCalculations();
+			bird.Update();
 
 			foreach(Entity obstacle in obstacles)
 			{
-				obstacle.CalculateVelocity();
-				obstacle.CalculatePosition();
+				obstacle.SelfCalculations();
+				obstacle.Update();
 			}
 
             base.Update(gameTime);
@@ -127,13 +129,13 @@ namespace FlappyBirdReplica
 
 			foreach (Entity entity in obstacles)
 				spriteBatch.Draw(entity.Texture2D,
-					new Rectangle((int) entity.X, (int) entity.Y,
+					new Rectangle((int) entity.Position.X, (int) entity.Position.Y,
 					(int) (entity.Texture2D.Width * entity.Scale.X),
 					(int) (entity.Texture2D.Height * entity.Scale.Y)), 
 					Color.White);
 
 			spriteBatch.Draw(bird.Texture2D,
-					new Rectangle((int)bird.X, (int)bird.Y,
+					new Rectangle((int)bird.Position.X, (int)bird.Position.Y,
 					(int)(bird.Texture2D.Width * bird.Scale.X),
 					(int)(bird.Texture2D.Height * bird.Scale.Y)),
 					Color.White);
