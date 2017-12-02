@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Generic;
 
 namespace FlappyBirdReplica.MyClasses
 {
@@ -9,6 +10,7 @@ namespace FlappyBirdReplica.MyClasses
 		public Vector2 Scale { get; set; }
 		public Texture2D Texture2D { get; set; }
 		public bool SimulatePhysics { get; set; }
+		public List<Collider> Colliders { get; set; }
 
 		protected Vector2 Velocity { get; set; }
 

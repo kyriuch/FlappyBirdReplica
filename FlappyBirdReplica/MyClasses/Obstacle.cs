@@ -17,8 +17,13 @@ namespace FlappyBirdReplica.MyClasses
 			Position = new Vector2(Position.X - MoveSpeed * Time.DeltaTime, Position.Y);
 
 			if (Position.X < -80)
+			{
 				if (OnScreenLeft != null)
 					OnScreenLeft();
+
+				foreach (RectangleCollider collider in Colliders)
+					collider.AlreadyPointed = false;
+			}	
 		}
 	}
 }
